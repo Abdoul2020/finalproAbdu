@@ -1,0 +1,1506 @@
+openapi: 3.0.0
+
+info:
+  title: Genymotion Cloud image API
+  description: |
+    Genymotion Cloud is Android operating system running on any hypervisor with or without dedicated GPU.</br></br>
+    Using This API, you'll be able to remotely control all Genymotion widgets and edit the Genymotion device Configuration.</br>
+    For more information about widgets and Configuration, you can check the [documentation](https://www.genymotion.com/help/cloud-paas/tutorial/).</br></br>
+    Please note that you'll need to use the same HTTP basic authentication with this API than to access this API reference.</br>
+  termsOfService: https://www.genymotion.com/cloud-paas/eula/
+  contact:
+    name: Genymotion Team
+    url: https://www.genymotion.com/help/cloud-paas/support/
+    email: support@genymotion.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+
+servers:
+  - url: /api/v1
+    description: Genymotion Cloud API.
+
+components:
+
+  schemas:
+
+    Adb:
+      type: object
+      required: [active, active_on_reboot]
+      properties:
+        active:
+          description: true if adb is enabled, false otherwise.
+          type: boolean
+        active_on_reboot:
+          description: true if adb will be active after reboot, false otherwise.
+          type: boolean
+      example:
+        active: true
+        active_on_reboot: true
+
+    AndroidId:
+      type: object
+      required: [value]
+      properties:
+        value:
+          description: Android Id of the device.
+          type: string
+          minLength: 16
+          maxLength: 16
+          pattern: "[0-9A-Fa-f]{16}"
+      example:
+        value: 1234567890abcdef
+
+    AndroidVersion:
+      type: object
+      properties:
+        version:
+          type: string
+          description: The version number of the android version.
+        api:
+          type: integer
+          minimum: 1
+          description: The api of the android version.
+      example:
+        version: "9.0"
+        api: 28
+
+    Baseband:
+      type: object
+      properties:
+        network_operator:
+          $ref: '#/components/schemas/BasebandOperator'
+        sim_operator:
+          $ref: '#/components/schemas/BasebandOperator'
+        msin:
+          type: string
+          description: Mobile Subscription Identification Number of the current SIM. sim MNC + MSIN must be a 12 chars string.
+          pattern: "[0-9]{9,10}"
+          minLength: 9
+          maxLength: 10
+        number:
+          type: string
+          description: Telephone number of the device on the network.
+      example:
+        network_operator:
+          mcc: 310
+          mnc: 250
+          name: T-Mobile
+        sim_operator:
+          mcc: 208
+          mnc: 10
+          name: S.F.R.
+        msin: 1234567890
+
+    BasebandOperator:
+      type: object
+      required: [mcc, mnc, name]
+      properties:
+        mcc:
+          type: string
+          description: MCC of the network.
+          pattern: "[0-9]{3}"
+          minLength: 3
+          maxLength: 3
+        mnc:
+          type: string
+          description: MNC of the network.
+          pattern: "[0-9]{2,3}"
+          minLength: 2
+          maxLength: 3
+        name:
+          type: string
+          description: Network name.
+      example:
+        mcc: 310
+        mnc: 250
+        name: T-Mobile
+
+    Battery:
+      type: object
+      properties:
+        level:
+          description: Level of the battery. 0 means totally discharged and 100 means fully charged.
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+        charging:
+          description: true if the device is charging, false otherwise.
+          type: boolean
+      example:
+        level: 42
+        charging: true
+
+    Clipboard:
+      type: object
+      required: [text]
+      properties:
+        text:
+          description: Test to set in the clipboard.
+          type: string
+      example:
+        text: The text to set in the clipboard.
+
+    Connection:
+      type: object
+      properties:
+        hostname:
+          description: Hostname of the connection.
+          type: string
+        ip:
+          description: IP of the connection.
+          type: string
+
+    Disk:
+      type: object
+      required: [max_read_byte_rate]
+      properties:
+        max_read_byte_rate:
+          description: Disk read rate limit in KB/sec. The value must range from 1 to 2097151. 0 to disable read rate limit.
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 2097151
+      example:
+        max_read_byte_rate: 512000
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          description: Error code.
+          type: string
+          enum: [bad_request, forbidden, internal_error, not_found, request_timeout]
+        message:
+          description: Message attached to the error.
+          type: string
+      example:
+        code: bad_request
+        message: Missing property.
+
+    Gps:
+      type: object
+      properties:
+        altitude:
+          description: Altitude is a geographic coordinate that specifies the vertical position of a point on the Earth's surface. The altitude value must range from -10,000m to 10,000m.
+          type: number
+          format: double
+          minimum: -10000
+          maximum: 10000
+        latitude:
+          description: Latitude is a geographic coordinate that specifies the north-south position of a point on the Earth's surface. The latitude value must range from -90° to 90°.
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          description: Longitude is a geographic coordinate that specifies the east-west position of a point on the Earth's surface. The longitude value must range from -180° to 180°.
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+        accuracy:
+          description: Accuracy describe the precision of the measure. The accuracy value must range from 0m to 200m.
+          type: number
+          format: double
+          minimum: 0
+          maximum: 200
+        bearing:
+          description: Bearing is the compass direction from a current position to an intended destination. The bearing value must range from 0° to 360° (not included).
+          type: number
+          format: double
+          minimum: 0
+          maximum: 360
+        speed:
+          description: The instant speed in m/s. The speed value value must range from 0 to 399.99 m/s.
+          type: number
+          format: float
+          minimum: 0
+          maximum: 399.99
+      example:
+        altitude: 5.5
+        latitude: 65.966667
+        longitude: -18.53333
+        accuracy: 100
+        bearing: 45
+        speed: 30
+
+    CertificateMetadata:
+      type: object
+      properties:
+        issuerDistinguishedName:
+          description: The Distinguished Name is a set of values entered during enrollment and the creation of
+            a Certificate Signing Request (CSR). This field can also include the certificate recipient's organization,
+            organization unit, locality, state or province, and country/region.
+          type: string
+        subjectAlternativeNames:
+          type: array
+          items:
+            type: string
+          description: Subject Alternative Name (SAN) is an extension to X.509 that allows various values to be
+            associated with a security certificate using a subjectAltName field.
+        type:
+          type: string
+          description: The origin of the certificate. Self Signed, Let's Encrypt or Custom.
+          enum: [ Let's Encrypt, Self Signed, Custom ]
+        notBefore:
+          type: string
+          description: Certificate not valid before this date.
+        notAfter:
+          type: string
+          description: Certificate not valid after this date.
+        serialNumber:
+          type: string
+          description: This number is assigned by the issuer and is unique within the issuer's list of issued certificates.
+        signatureAlgorithmName:
+          type: string
+          description: The signature algorithm name for the certificate signature algorithm. An example is "SHA256withRSA".
+        signatureAlgorithmOID:
+          type: string
+          description: The signature algorithm OID string. An OID is represented by a set of nonnegative whole numbers separated by periods. For example, the string "1.2.840.10040.4.3" identifies the SHA-1 with DSA signature algorithm
+      example:
+        issuerDistinguishedName: C=USA, ST=SF, L=SF, O=Genymotion, OU=Genymotion Image, CN=0.0.0.0
+        subjectAlternativeNames: [ 0.0.0.0, 192.168.1.2 ]
+        type: Self Signed
+        notBefore: Mon Oct 05 22:25:51 GMT+00:00 2020
+        notAfter: Thu Oct 03 22:25:51 GMT+00:00 2030
+        serialNumber: 1601936751048
+        signatureAlgorithmName: SHA256withRSA
+        signatureAlgorithmOID: 1.2.840.113549.1.1.11
+
+    InstanceMetadata:
+      type: object
+      properties:
+        instance_id:
+          type: string
+          description: The id of the instance (if available).
+        instance_type:
+          type: string
+          description: The type of the instance (if available).
+        geographical_zone:
+          type: string
+          description: The geographical zone (if available).
+        image_id:
+          type: string
+          description: The image id (if available).
+        genymotion_version:
+          type: string
+          description: The version of Genymotion (vX.X).
+        ip_address:
+          type: string
+          description: The virtual machine IP address.
+        hypervisor:
+          type: string
+          description: The hypervisor used
+          enum: [vbox, kvm, xen, hyperv, vmware, vsphere, none, unknown]
+        provider:
+          type: string
+          description: The cloud provider used.
+          enum: [alicloud, aws, gcp, custom]
+        uptime:
+          description: The number of seconds elapsed since last system boot.
+          type: integer
+          format: int64
+          minimum: 0
+      example:
+        instance_id: i-XXXXXXXXXXXXX
+        instance_type: t2.medium
+        geographical_zone: eu-west-XX
+        image_id: ami-XXXXXXXX
+        genymotion_version: "5.0"
+        ip_address: 192.168.59.101
+        hypervisor: xen
+        provider: aws
+        uptime: 543345
+
+    Imei:
+      type: object
+      properties:
+        value:
+          description: The International Mobile Equipment Identity.
+          type: string
+          pattern: "[0-9]{15,16}"
+          minLength: 15
+          maxLength: 16
+      example:
+        value: 123456789012345
+
+    KeyboardEvent:
+      type: object
+      required: [event, key]
+      properties:
+        action:
+          type: string
+          enum: [up, down]
+        keycode:
+          type: integer
+          description: Linux keycode from https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/linux/input-event-codes.h as an integer.
+      example:
+        action: up
+        keycode: 28
+
+    Kiosk:
+      type: object
+      required: [activated]
+      properties:
+        activated:
+          type: boolean
+          description: true if an application is currently kiosked, false otherwise.
+        package_name:
+          type: string
+          description: Package name of the currently kiosked application.
+
+    LinkQuality:
+      type: object
+      properties:
+        bandwidth:
+          type: integer
+          format: int32
+          description: bandwidth of the link in Kb/s.
+          minimum: 0
+        delay:
+          type: integer
+          format: int32
+          description: delay on the link in ms.
+          minimum: 0
+        packet_loss:
+          type: integer
+          format: int32
+          description: packet loss on the link in %.
+          minimum: 0
+          maximum: 100
+      example:
+        bandwidth: 512000
+        delay: 500
+        packet_loss: 1
+
+    Message:
+      type: object
+      required: [message, number]
+      properties:
+        message:
+          type: string
+          description: Text of the message.
+        number:
+          type: string
+          description: Phone number of the sender. 1 to 16 digits only.
+          pattern: "[0-9]{1,16}"
+          minLength: 1
+          maxLength: 16
+
+    NetworkQuality:
+      type: object
+      properties:
+        dns:
+          type: object
+          properties:
+            delay:
+              type: integer
+              format: int32
+              description: delay in dns responses in ms.
+              minimum: 0
+        download:
+          $ref: '#/components/schemas/LinkQuality'
+        upload:
+          $ref: '#/components/schemas/LinkQuality'
+      example:
+        dns:
+          delay: 250
+        download:
+          bandwidth: 512000
+          delay: 100
+          packet_loss: 5
+        upload:
+          bandwidth: 124000
+          delay: 300
+          packet_loss: 1
+
+    MouseEvent:
+      type: object
+      required: [event, position]
+      properties:
+        event:
+          description: Mouse event type.
+          type: string
+          enum: [press, release, move]
+        position:
+          $ref: '#/components/schemas/Point'
+      example:
+        event: press
+        position:
+          x: 100
+          y: 200
+
+    Orientation:
+      type: object
+      required: [angle]
+      properties:
+        angle:
+          description: Desired final value for the device orientation. from 0 to 360 (not included) degree.
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 360
+          exclusiveMaximum: true
+          default: 0
+      example:
+        angle: 180
+
+    Point:
+      type: object
+      required: [x, y]
+      properties:
+        x:
+          description: x coordinate.
+          type: integer
+          format: int32
+          minimum: 0
+        y:
+          description: y coordinate.
+          type: integer
+          format: int32
+          minimum: 0
+      example:
+        x: 200
+        y: 100
+
+    Property:
+      type: object
+      required: [key, value]
+      properties:
+        key:
+          description: Key of the property.
+          type: string
+        value:
+          description: Value of the property.
+          type: string
+      example:
+        key: service.adb.tcp.port
+        value: 5555
+
+    Resolution:
+      type: object
+      required: [width, height, dpi]
+      properties:
+        width:
+          description: The width of the screen resolution.
+          type: integer
+          format: int32
+          minimum: 0
+        height:
+          description: The height of the screen resolution.
+          type: integer
+          format: int32
+          minimum: 0
+        dpi:
+          description: The dpi of the screen.
+          type: integer
+          format: int32
+          minimum: 0
+      example:
+        width: 800
+        height: 600
+        dpi: 260
+
+    ShellCommands:
+      type: object
+      required: [commands]
+      properties:
+        commands:
+          description: Commands to execute in a shell on the android device.
+          type: array
+          items:
+            type: string
+        timeout_in_seconds:
+          description: timeout limit for all the commands in seconds. 0 for no timeout. Default is 1 second.
+          type: integer
+          format: int32
+          minimum: 0
+      example:
+        commands: ["ls", "mv a.txt b.txt", "rm c.txt", "ls", "whoami", "su -c whoami"]
+        timeout_in_seconds: 5
+
+    Status:
+      type: object
+      properties:
+        connections:
+          description: Current opened connections on the instance.
+          type: array
+          items:
+            $ref: '#/components/schemas/Connection'
+
+    Value:
+      type: object
+      properties:
+        value:
+          description: Value.
+          type: string
+      example:
+        value: The value.
+
+  responses:
+
+    BadRequest:
+      description: Wrong parameters.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Error:
+      description: Generic error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Forbidden to access this ressource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: File not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+paths:
+
+  /android/clipboard:
+
+    get:
+      tags:
+        - 'android'
+      summary: Get clipboard content
+      description: Get the current content of the clipboard as a string.
+      responses:
+        '200':
+          description: Clipboard content.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Clipboard'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+    post:
+      tags:
+        - 'android'
+      summary: Set clipboard content
+      description: Replace the current content of the clipboard by the specified value.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Clipboard'
+      responses:
+        '200':
+          description: Clipboard content set.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+
+  /android/id:
+
+    get:
+      tags:
+        - 'android'
+      summary: Get Android Id
+      description: Get the current android id of the device.
+      responses:
+        '200':
+          description: Android Id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AndroidId'
+        default:
+          $ref: '#/components/responses/Error'
+
+    post:
+      tags:
+        - 'android'
+      summary: Set Android Id
+      description: Set a new Android Id for this device.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AndroidId'
+      responses:
+        '200':
+          description: Android Id set.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /android/reboot:
+
+    post:
+      tags:
+        - 'android'
+      summary: Reboot
+      description: Reboot the android device.
+      responses:
+        '200':
+          description: Device will successfully reboot.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+
+  /android/poweroff:
+
+    post:
+      tags:
+        - 'android'
+      summary: Poweroff
+      description: Poweroff the android device.
+      responses:
+        '200':
+          description: Device will successfully poweroff.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /android/resolution:
+
+    get:
+      tags:
+        - 'android'
+      summary: Get the resolution
+      description: Get the android device resolution.
+      responses:
+        '200':
+          description: Device resolution.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resolution'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+    post:
+      tags:
+        - 'android'
+      summary: Set the resolution
+      description: Set the value of the resolution (width, height and dpi) of the android device.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resolution'
+      responses:
+        '200':
+          description: Android resolution updated.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /android/shell:
+
+    post:
+      tags:
+        - 'android'
+      summary: Execute shell commands.
+      description: Execute shell commands on the device and retrieve outputs.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShellCommands'
+      responses:
+        '200':
+          description: Commands outputs.
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /android/version:
+
+    get:
+      tags:
+        - 'android'
+      summary: Get android version
+      description: Get the version of the current android device.
+      responses:
+        '200':
+          description: Android version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AndroidVersion'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /camera/image:
+
+    delete:
+      tags:
+        - 'camera'
+      summary: Stop using image as camera
+      description: Stop using an image as the camera and use the default mode.
+      responses:
+        '202':
+          description: Image mode disabled.
+        default:
+          $ref: '#/components/responses/Error'
+
+    put:
+      tags:
+        - 'camera'
+      summary: Use an image as camera
+      description: Put an image to be used as the camera of the device.
+      requestBody:
+        content:
+          image/*:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Image used by camera.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /configuration/adb:
+
+    get:
+      tags:
+        - 'configuration'
+      summary: Get adb configuration
+      description: Get the current adb configuration in this android device.
+      responses:
+        '200':
+          description: Adb status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Adb'
+        default:
+          $ref: '#/components/responses/Error'
+
+    post:
+      tags:
+        - 'configuration'
+      summary: Configure adb
+      description: Configure adb in the android device.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Adb'
+      responses:
+        '200':
+          description: Adb status updated.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /configuration/properties:
+
+    x-handler: com.genymobile.webrtcd.api.v1.configuration.Properties
+
+    post:
+      tags:
+        - 'configuration'
+      summary: Set multiple properties
+      description: Set an array of properties all at once. Trying to modify a read only property (key starting with `ro.`) will return a 403 forbidden error.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Property'
+      responses:
+        '200':
+          description: Properties set.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /configuration/properties/{key}:
+
+    x-handler: com.genymobile.webrtcd.api.v1.configuration.Property
+
+    parameters:
+      - name: key
+        in: path
+        description: Key of the system property.
+        required: true
+        schema:
+          type: string
+
+    get:
+      tags:
+        - 'configuration'
+      summary: Get a property
+      description: Get a system property using its key name.
+      responses:
+        '200':
+          description: System property.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        default:
+          $ref: '#/components/responses/Error'
+
+    post:
+      tags:
+        - 'configuration'
+      summary: Set a property
+      description: Set a system property using its key name.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Value'
+      responses:
+        '200':
+          description: System property set.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /configuration/kiosk:
+
+    get:
+      tags:
+        - 'configuration'
+      summary: Get kiosk mode information
+      description: Retrieve information about kiosk mode.
+      responses:
+        '200':
+          description: Kiosk mode information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Kiosk'
+        default:
+          $ref: '#/components/responses/Error'
+
+    delete:
+      tags:
+        - 'configuration'
+      summary: Disable kiosk mode
+      description: Disable kiosk mode on the device.
+      responses:
+        '204':
+          description: Kiosk mode disabled.
+        default:
+          $ref: '#/components/responses/Error'
+
+    post:
+      tags:
+        - 'configuration'
+      summary: Enable kiosk mode
+      description: Enable the kiosk mode on the device using the visible application. Kiosk mode locks the system to run one single Android application, in a similar way that android handles "app pinning" or "lock task mode".
+      responses:
+        '200':
+          description: Kiosk mode enabled.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /files/{path}:
+
+    x-handler: com.genymobile.webrtcd.api.v1.files.Files
+
+    parameters:
+      - name: path
+        in: path
+        description: File path in the device file system.
+        required: true
+        schema:
+          type: string
+        example: sdcard/directory/myfile.txt
+
+    delete:
+      tags:
+        - 'files'
+      summary: Delete file
+      description: Delete the file at the specified {path} location on the device.
+      responses:
+        '200':
+          description: File deleted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/Error'
+
+    get:
+      tags:
+        - 'files'
+      summary: Retrieve a file
+      description: Download the file from the device file system specified by the {path} parameter.
+      responses:
+        '200':
+          description: File found. Returned MIME type may be more accurate depending on file extension.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/Error'
+
+    put:
+      tags:
+        - 'files'
+      summary: Upload a file
+      description: Upload a file at the specified {path} location on the device.
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: File uploaded.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /hardware/disk:
+
+    delete:
+      tags:
+        - 'hardware'
+      summary: Clear disk cache
+      description: Clear the current disk cache. This forces applications to trigger I/O directly from disk rather than taking ressources directly from ram.
+      responses:
+        '204':
+          description: Disk IO cache cleared.
+        default:
+          $ref: '#/components/responses/Error'
+
+    get:
+      tags:
+        - 'hardware'
+      summary: Get the disk IO rates
+      description: Get the current speed of the virtual android disk.
+      responses:
+        '200':
+          description: Disk IO rates.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Disk'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+    post:
+      tags:
+        - 'hardware'
+      summary: Set the disk IO rates
+      description: Set the current speed of the virtual android disk.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Disk'
+      responses:
+        '200':
+          description: Disk IO rates updated.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /hardware/imei:
+
+    get:
+      tags:
+        - 'hardware'
+      summary: Get the imei
+      description: Get the International Mobile Equipment Identity of the device.
+      responses:
+        '200':
+          description: Imei.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Imei'
+        default:
+          $ref: '#/components/responses/Error'
+
+    post:
+      tags:
+        - 'hardware'
+      summary: Set the imei
+      description: Set the International Mobile Equipment Identity of the device.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Imei'
+      responses:
+        '200':
+          description: imei set.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /inputs/keyboard:
+
+    post:
+      tags:
+        - 'input'
+      summary: Emulate keyboard events
+      description: Emulate a list of several chained key events.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/KeyboardEvent'
+      responses:
+        '200':
+          description: keyboard events dispatched.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /inputs/mouse:
+
+    post:
+      tags:
+        - 'input'
+      summary: Emulate mouse events
+      description: Emulate a list of several chained mouse events.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/MouseEvent'
+      responses:
+        '200':
+          description: mouse events dispatched.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /inputs/tap:
+
+    post:
+      tags:
+        - 'input'
+      summary: Input a tap
+      description: Input tap on screen at the specified coordinates.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Point'
+      responses:
+        '200':
+          description: tap dispatched.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /inputs/text:
+
+    post:
+      tags:
+        - 'input'
+      summary: Input a text
+      description: Input a charsequence as it is coming from a keyboard.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  description: text to input.
+                  type: string
+              required:
+                - text
+      responses:
+        '200':
+          description: text inputted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /instance/metadata:
+
+    get:
+      tags:
+        - 'instance'
+      summary: Get the instance metadata
+      description: Get the current informations of instance (uptime and various properties from cloud provider).
+      responses:
+        '200':
+          description: Current instance metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstanceMetadata'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /instance/certificate:
+
+    get:
+      tags:
+        - 'instance'
+      summary: Get the instance certificate informations
+      description: Get the current certificate informations
+      responses:
+        '200':
+          description: Current instance certificate informations.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateMetadata'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /instance/screenshot:
+
+    get:
+      tags:
+        - 'instance'
+      summary: Get a screenshot of the instance
+      description: Get a current screenshot of the instance.
+      parameters:
+        - in: query
+          name: scale
+          schema:
+            type: number
+            minimum: 0.0
+            maximum: 1.0
+            default: 1.0
+          description: Scale to be applied to the resulting screenshot (value between 0 and 1).
+        - in: query
+          name: quality
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100
+            default: 100
+          description: The quality of the compression between 0 and 100.
+      responses:
+        '200':
+          description: Current screenshot.
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        default:
+          $ref: '#/components/responses/Error'
+
+  /instance/status:
+
+    get:
+      tags:
+        - 'instance'
+      summary: Get status information
+      description: Get information about the current status of the instance.
+      responses:
+        '200':
+          description: Status information of the instance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+
+  /network/baseband:
+
+    get:
+      tags:
+        - 'network'
+      summary: Get the baseband configuration
+      description: Get the current android baseband configuration, including operators information, imsi and phone number.
+      responses:
+        '200':
+          description: Baseband details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Baseband'
+        default:
+          $ref: '#/components/responses/Error'
+
+    post:
+      tags:
+        - 'network'
+      summary: Configure baseband
+      description: Set one or multiple baseband parameters, including operators information, imsi and phone number.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Baseband'
+      responses:
+        '200':
+          description: Baseband informations updated.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /network/quality:
+
+    get:
+      tags:
+        - 'network'
+      summary: Get the network quality
+      description: Get the current quality of network (speed, packet drop and delay).
+      responses:
+        '200':
+          description: Network settings details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkQuality'
+        default:
+          $ref: '#/components/responses/Error'
+
+    post:
+      tags:
+        - 'network'
+      summary: Configure the network quality
+      description: |
+        Set one or multiple network quality parameters. Sending an empty JSON object
+        {} will disable network quality settings.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkQuality'
+      responses:
+        '200':
+          description: Network quality updated.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /sensors/battery:
+
+    get:
+      tags:
+        - 'sensor'
+      summary: Get the battery status
+      description: |
+        Get the current Android battery status (level and charging).
+        Battery level is between 0 (discharged) and 100 (fully charged).
+        Battery charging status is either charging (true) or discharging (false).
+      responses:
+        '200':
+          description: Battery status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Battery'
+
+    post:
+      tags:
+        - 'sensor'
+      summary: Configure the battery
+      description: Set the android device battery status (level/charging).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Battery'
+      responses:
+        '200':
+          description: Battery status set.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /sensors/gps:
+
+    get:
+      tags:
+        - 'sensor'
+      summary: Get the GPS parameters
+      description: Get the current GPS parameters of the current android device.
+      responses:
+        '200':
+          description: GPS status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gps'
+        default:
+          $ref: '#/components/responses/Error'
+
+    post:
+      tags:
+        - 'sensor'
+      summary: Configure the GPS parameters
+      description: |
+        Set the android GPS values including
+        altitude, longitude, latitude, accuracy, bearing, speed
+        GPS is the Global Positioning System, a satellite-based navigation system.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Gps'
+      responses:
+        '200':
+          description: GPS status set.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /sensors/orientation:
+
+    get:
+      tags:
+        - 'sensor'
+      summary: Get the device orientation
+      description: Get the orientation angle of the device, in degree.
+      responses:
+        '200':
+          description: Orientation value.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Orientation'
+        default:
+          $ref: '#/components/responses/Error'
+
+    post:
+      tags:
+        - 'sensor'
+      summary: Configure the device orientation
+      description: Set the orientation of the android device by the given amount of degrees.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Orientation'
+      responses:
+        '200':
+          description: Orientation set.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /telephony/call/{number}:
+
+    x-handler: com.genymobile.webrtcd.api.v1.telephony.Call
+
+    parameters:
+      - name: number
+        in: path
+        description: Phone number of the caller. 1 to 16 digits only.
+        required: true
+        schema:
+          type: string
+          pattern: "[0-9]{1,16}"
+          minLength: 1
+          maxLength: 16
+        example: 0045849375930
+
+    delete:
+      tags:
+        - 'telephony'
+      summary: End a call on the device
+      description: End a call on the device using the specified number.
+      responses:
+        '200':
+          description: Call ended.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+    post:
+      tags:
+        - 'telephony'
+      summary: Start a call on the device
+      description: Start a call on the device using the specified number.
+      responses:
+        '200':
+          description: Call started.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /telephony/message:
+
+    post:
+      tags:
+        - 'telephony'
+      summary: Send a text message to the device
+      description: Send a text message to the device from the specifid number.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Message'
+      responses:
+        '200':
+          description: Messange sent.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        default:
+          $ref: '#/components/responses/Error'
